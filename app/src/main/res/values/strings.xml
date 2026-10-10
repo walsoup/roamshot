@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Polaroam</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Walk</string>
+    <string name="nav_gallery">Gallery</string>
+    <string name="nav_stats">Stats</string>
+
+    <!-- Shared -->
+    <string name="loading">Loading</string>
+    <string name="quest_difficulty_cd">Difficulty %1$d of %2$d</string>
+    <string name="quest_points">%1$d pts</string>
+    <string name="quest_first_try_hint">+%1$d first try</string>
+    <string name="quest_status_open">Open</string>
+    <string name="quest_status_done">Done</string>
+    <string name="quest_status_skipped">Skipped</string>
+    <string name="category_nature">Nature</string>
+    <string name="category_animals">Animals</string>
+    <string name="category_architecture">Architecture</string>
+    <string name="category_textures">Textures</string>
+    <string name="category_colors">Colors</string>
+    <string name="category_objects">Objects</string>
+    <string name="category_sky">Sky</string>
+
+    <plurals name="streak_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+
+    <!-- Home -->
+    <string name="home_tagline">Pick a walk. Get side quests. Snap the proof.</string>
+    <string name="home_resume_title">Walk in progress</string>
+    <string name="home_resume_body">%1$s: %2$d of %3$d quests done</string>
+    <string name="home_resume_action">Continue</string>
+    <string name="home_walk_type_label">What kind of walk?</string>
+    <string name="home_walk_type_placeholder">e.g. rainy riverside stroll</string>
+    <string name="home_walk_type_counter">%1$d/%2$d</string>
+    <string name="home_presets_label">Or pick one</string>
+    <string name="home_start_walk">Start walk</string>
+    <string name="error_walk_type_blank">Type a walk or pick a preset first.</string>
+    <string name="error_start_walk">Couldn\'t start the walk. Try again.</string>
+
+    <!-- Quest board -->
+    <string name="board_progress">%1$d/%2$d done, %3$d pts</string>
+    <string name="board_source_model">Made by on-device AI</string>
+    <string name="board_source_builtin">Built-in quest pool</string>
+    <string name="board_finished_title">Walk complete!</string>
+    <string name="board_finished_body">You earned %1$d points on this walk.</string>
+    <string name="board_not_found">This walk doesn\'t exist anymore.</string>
+    <string name="board_error">Couldn\'t load this walk.</string>
+    <string name="board_back">Back</string>
+
+    <!-- Capture -->
+    <string name="capture_look_for">Looks like: %1$s</string>
+    <string name="capture_attempt">Attempt %1$d</string>
+    <string name="capture_snap">Snap</string>
+    <string name="capture_back">Back</string>
+    <string name="capture_scanning">Scanning…</string>
+    <string name="capture_match_title">Match!</string>
+    <string name="capture_points_earned">+%1$d pts</string>
+    <string name="capture_first_try">First-try bonus included</string>
+    <string name="capture_saw">Saw: %1$s (%2$d%%)</string>
+    <string name="capture_saw_nothing">Couldn\'t recognize anything.</string>
+    <string name="capture_done">Done</string>
+    <string name="capture_no_match_title">Not quite</string>
+    <string name="capture_no_match_body">That doesn\'t look like the target yet.</string>
+    <string name="capture_retry">Try again</string>
+    <string name="capture_skip">Skip quest</string>
+    <string name="capture_already_resolved">This quest is already finished.</string>
+    <string name="capture_photo_cd">Photo for %1$s</string>
+    <string name="capture_error_load">Couldn\'t load this quest.</string>
+    <string name="capture_error_quest_missing">This quest couldn\'t be found.</string>
+    <string name="capture_error_camera">The camera couldn\'t take that photo.</string>
+    <string name="capture_error_verify">Couldn\'t check that photo. Try again.</string>
+    <string name="capture_error_skip">Couldn\'t skip this quest. Try again.</string>
+    <string name="capture_permission_title">Camera needed</string>
+    <string name="capture_permission_rationale">Polaroam needs the camera to snap quest photos. Photos never leave this device.</string>
+    <string name="capture_permission_grant">Allow camera</string>
+    <string name="capture_permission_denied">Camera access is off. Turn it on in Settings to snap quest photos.</string>
+    <string name="capture_permission_settings">Open settings</string>
+
+    <!-- Gallery -->
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_empty_title">No polaroids yet</string>
+    <string name="gallery_empty_body">Finish a quest to pin your first photo here.</string>
+    <string name="gallery_error">Couldn\'t load your photos.</string>
+    <string name="gallery_photo_cd">Photo for quest %1$s</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Stats</string>
+    <string name="stats_total_score">Total score</string>
+    <string name="stats_current_streak">Current streak</string>
+    <string name="stats_best_streak">Best: %1$s</string>
+    <string name="stats_quests_completed">Quests completed</string>
+
+    <!-- On-device model -->
+    <string name="model_title">On-device AI</string>
+    <string name="model_not_configured">Quests come from the built-in pool.</string>
+    <string name="model_not_downloaded">Quests come from the built-in pool. Download the Gemma model (about 550 MB, Wi-Fi only) to generate fresh quests on your phone.</string>
+    <string name="model_download">Download model</string>
+    <string name="model_downloading">Downloading… %1$d%%</string>
+    <string name="model_downloading_indeterminate">Waiting for Wi-Fi…</string>
+    <string name="model_cancel">Cancel</string>
+    <string name="model_ready">Gemma is ready. New walks get AI-made quests.</string>
+    <string name="model_delete">Delete model</string>
+    <string name="model_failed">Download failed: %1$s</string>
+    <string name="model_retry">Retry</string>
+    <string name="notification_channel_downloads">Model downloads</string>
+    <string name="notification_downloading_model">Downloading quest model</string>
+</resources>

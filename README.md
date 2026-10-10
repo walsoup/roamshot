@@ -31,6 +31,24 @@ night walks, yes. horror-movie decisions, no.
 
 quests must not ask for photos of people or faces, trespassing, private property, roads or traffic, unsafe night activities, or purchases.
 
+## building it
+
+the app is Polaroam (`app.polaroam`). a few things can't live in the repo as text, so set them up once:
+
+1. run `gradle wrapper` to generate `gradlew` and `gradle/wrapper/gradle-wrapper.jar`.
+2. drop `PixelifySans.ttf` (or `Silkscreen-Regular.ttf`) into `app/src/main/assets/fonts/`. until then it falls back to monospace.
+3. optional, for AI-made quests: put an https link to a MediaPipe Gemma `.task` file in `local.properties`:
+
+   ```
+   polaroam.modelUrl=https://example.com/gemma3-1b-it-int4.task
+   polaroam.modelSha256=<sha256 of that file>
+   ```
+
+   the app downloads it on Wi-Fi from the Stats screen. without it, quests come from the built-in pool.
+4. `polaroam.stubAi=true` swaps in the canned generator and a fake verifier that always matches.
+
+unit tests: `./gradlew testDebugUnitTest`. Room tests: `./gradlew connectedDebugAndroidTest`.
+
 ## next
 
 - [ ] quest board and navigation

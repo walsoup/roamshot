@@ -14,9 +14,12 @@ import app.polaroam.domain.model.QuestCategory.SKY
 import app.polaroam.domain.model.QuestCategory.TEXTURES
 import app.polaroam.domain.model.WalkPreset
 import app.polaroam.domain.model.WalkPreset.CITY_PARK
+import app.polaroam.domain.model.WalkPreset.COASTAL_WALK
 import app.polaroam.domain.model.WalkPreset.FOREST_TRAIL
+import app.polaroam.domain.model.WalkPreset.MOUNTAIN_TRAIL
 import app.polaroam.domain.model.WalkPreset.NEIGHBORHOOD
 import app.polaroam.domain.model.WalkPreset.NIGHT_WALK
+import app.polaroam.domain.model.WalkPreset.RAINY_STROLL
 
 /** A built-in quest. Empty [presets] means it suits any daytime walk. */
 data class PoolQuest(
@@ -35,6 +38,7 @@ data class PoolQuest(
         category = category,
         difficulty = difficulty,
         targetLabels = targetLabels,
+        poolKey = key,
     )
 }
 
@@ -209,6 +213,29 @@ object CannedQuestPool {
             "any-rainbow", "Rainbow Chaser",
             "Catch a rainbow, or any splash of rainbow light, after the rain.",
             SKY, HARD, listOf("rainbow", "sky"),
+        ),
+        // Coastal Walk
+        PoolQuest(
+            "coast-wave", "Ocean Wave",
+            "Photograph the crest or foam of a breaking wave by the shore.",
+            NATURE, EASY, listOf("water", "sand"), setOf(COASTAL_WALK),
+        ),
+        PoolQuest(
+            "coast-shell", "Shoreline Shell",
+            "Find a seashell or weathered sea pebble nestled in the sand.",
+            TEXTURES, EASY, listOf("sand", "rock"), setOf(COASTAL_WALK),
+        ),
+        // Rainy Stroll
+        PoolQuest(
+            "rain-umbrella", "Rain Guard",
+            "Spot a bright umbrella bringing color to a rainy stroll.",
+            OBJECTS, MEDIUM, listOf("umbrella", "water"), setOf(RAINY_STROLL),
+        ),
+        // Mountain Trail
+        PoolQuest(
+            "mountain-peak", "Mountain Peak",
+            "Photograph a high rocky ridge or peak rising against the sky.",
+            NATURE, MEDIUM, listOf("rock", "sky"), setOf(MOUNTAIN_TRAIL),
         ),
     )
 }

@@ -3,6 +3,7 @@ package app.polaroam.domain.usecase
 import app.polaroam.core.result.runCatchingCancellable
 import app.polaroam.core.time.AppClock
 import app.polaroam.domain.ai.PhotoVerifier
+import app.polaroam.domain.ai.PhotoVerifierUnavailableException
 import app.polaroam.domain.model.Completion
 import app.polaroam.domain.model.QuestStatus
 import app.polaroam.domain.model.Verdict
@@ -27,6 +28,9 @@ sealed interface SubmitResult {
 
     /** The quest does not exist or was already completed or skipped. */
     data object QuestUnavailable : SubmitResult
+
+    /** The vision model has not been downloaded, so the photo could not be checked. */
+    data object VerifierUnavailable : SubmitResult
 
     data class Failed(val cause: Throwable) : SubmitResult
 }
@@ -57,7 +61,7 @@ class SubmitPhotoUseCase @Inject constructor(
             verifier.verify(bitmap, walkQuest.quest)
         }.getOrElse {
             photos.discard(capture)
-            return SubmitResult.Failed(it)
+            return if (it is PhotoVerifierUnavailableException) SubmitResult.VerifierUnavailable else SubmitResult.Failed(it)
         }
 
         if (!verdict.match) {

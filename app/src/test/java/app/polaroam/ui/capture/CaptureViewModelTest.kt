@@ -1,12 +1,16 @@
 package app.polaroam.ui.capture
 
+import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import app.polaroam.R
 import app.polaroam.ai.vision.StubPhotoVerifier
 import app.polaroam.domain.ai.PhotoVerifier
+import app.polaroam.domain.ai.PhotoVerifierUnavailableException
 import app.polaroam.domain.model.Difficulty
+import app.polaroam.domain.model.Quest
 import app.polaroam.domain.model.QuestSource
 import app.polaroam.domain.model.QuestStatus
+import app.polaroam.domain.model.Verdict
 import app.polaroam.domain.scoring.ScoreCalculator
 import app.polaroam.domain.streak.StreakCalculator
 import app.polaroam.domain.usecase.SkipQuestUseCase
@@ -171,5 +175,26 @@ class CaptureViewModelTest {
         assertThat(photos.discarded).containsExactly(file)
         vm.onRetry()
         assertThat(vm.uiState.value.phase).isEqualTo(CapturePhase.Ready)
+    }
+
+    @Test
+    fun `missing vision model points at the model download`() = runTest {
+        seedQuest()
+        val vm = viewModel(
+            object : PhotoVerifier {
+                override suspend fun verify(bitmap: Bitmap, quest: Quest): Verdict =
+                    throw PhotoVerifierUnavailableException("no model")
+            },
+        )
+
+        vm.onPhotoCaptured(vm.beginCapture()!!)
+
+        assertThat(vm.uiState.value.phase).isEqualTo(
+            CapturePhase.Error(
+                R.string.capture_error_models_missing,
+                canRetry = true,
+                illustration = R.drawable.illo_model_missing,
+            ),
+        )
     }
 }

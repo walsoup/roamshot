@@ -36,6 +36,7 @@ data class QuestEntity(
     val targetLabels: List<String>,
     val status: String,
     val attempts: Int,
+    val poolKey: String? = null,
 )
 
 @Entity(
@@ -92,4 +93,5 @@ data class GalleryRow(
     val confidence: Float,
     val completedAtEpochMs: Long,
     val localDay: String,
+    val poolKey: String?,
 )

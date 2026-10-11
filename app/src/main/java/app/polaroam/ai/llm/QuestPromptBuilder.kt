@@ -4,6 +4,11 @@ import app.polaroam.ai.vision.LabelVocabulary
 import app.polaroam.domain.model.QuestCategory
 import app.polaroam.domain.model.QuestRules
 import app.polaroam.domain.model.WalkTypeInput
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 
 class QuestPromptBuilder(
     private val vocabulary: Set<String> = LabelVocabulary.labels,
@@ -15,6 +20,7 @@ class QuestPromptBuilder(
         val labels = vocabulary.sorted().joinToString(", ")
 
         val system = buildString {
+            appendLine("/no_think")
             appendLine("You design short photo side quests for someone on a walk.")
             appendLine("Reply with ONLY one JSON object. No prose, no markdown, no comments.")
             appendLine()
@@ -35,12 +41,54 @@ class QuestPromptBuilder(
             appendLine("Safety rules (never break these):")
             SAFETY_RULES.forEach { appendLine("- $it") }
             appendLine()
-            appendLine("Example of one item:")
-            append(EXAMPLE_ITEM)
+            appendLine("Example JSON output:")
+            append("""{"quests":[$EXAMPLE_ITEM]}""")
         }
 
-        val user = "Walk type: \"${sanitizeWalkType(walkType)}\". Create $n quests that fit this walk."
-        return LlmPrompt(system = system, user = user)
+        val user = "/no_think Walk type: \"${sanitizeWalkType(walkType)}\". Create $n quests that fit this walk."
+        return LlmPrompt(system = system, user = user, jsonSchema = jsonSchema(n))
+    }
+
+    /** JSON Schema for the reply, so constrained decoding can only produce allowed categories and labels. */
+    fun jsonSchema(count: Int): String {
+        val n = QuestRules.clampCount(count)
+        fun stringEnum(values: Iterable<String>) = buildJsonObject {
+            put("type", "string")
+            putJsonArray("enum") { values.forEach { add(it) } }
+        }
+        val quest = buildJsonObject {
+            put("type", "object")
+            putJsonObject("properties") {
+                putJsonObject("title") { put("type", "string") }
+                putJsonObject("objective") { put("type", "string") }
+                put("category", stringEnum(QuestCategory.entries.map { it.name }))
+                putJsonObject("difficulty") {
+                    put("type", "integer")
+                    putJsonArray("enum") { (1..3).forEach { add(it) } }
+                }
+                putJsonObject("targetLabels") {
+                    put("type", "array")
+                    put("minItems", QuestRules.MIN_LABELS)
+                    put("maxItems", QuestRules.MAX_LABELS)
+                    put("items", stringEnum(vocabulary.sorted()))
+                }
+            }
+            putJsonArray("required") { QUEST_KEYS.forEach { add(it) } }
+            put("additionalProperties", false)
+        }
+        return buildJsonObject {
+            put("type", "object")
+            putJsonObject("properties") {
+                putJsonObject("quests") {
+                    put("type", "array")
+                    put("minItems", n)
+                    put("maxItems", n)
+                    put("items", quest)
+                }
+            }
+            putJsonArray("required") { add("quests") }
+            put("additionalProperties", false)
+        }.toString()
     }
 
     fun buildRetry(original: LlmPrompt, problem: String): LlmPrompt {
@@ -65,6 +113,7 @@ class QuestPromptBuilder(
             "Never ask to touch, pick, feed, chase or disturb animals or plants.",
         )
 
+        private val QUEST_KEYS = listOf("title", "objective", "category", "difficulty", "targetLabels")
         private const val DEFAULT_WALK_TYPE = "a relaxed walk"
         private const val MAX_REASON_LENGTH = 300
         private val unsafeChars = Regex("[\\r\\n\\t\"`{}<>\\\\]")

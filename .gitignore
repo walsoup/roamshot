@@ -13,3 +13,6 @@
 *.aab
 *.keystore
 *.jks
+.venv/
+__pycache__/
+*.pyc

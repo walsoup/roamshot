@@ -73,6 +73,7 @@
     <string name="capture_error_quest_missing">This quest couldn\'t be found.</string>
     <string name="capture_error_camera">The camera couldn\'t take that photo.</string>
     <string name="capture_error_verify">Couldn\'t check that photo. Try again.</string>
+    <string name="capture_error_models_missing">Photo checks need the open AI models. Download them on the Stats screen.</string>
     <string name="capture_error_skip">Couldn\'t skip this quest. Try again.</string>
     <string name="capture_permission_title">Camera needed</string>
     <string name="capture_permission_rationale">Polaroam needs the camera to snap quest photos. Photos never leave this device.</string>
@@ -95,17 +96,22 @@
     <string name="stats_quests_completed">Quests completed</string>
 
     <!-- On-device model -->
-    <string name="model_title">On-device AI</string>
-    <string name="model_not_configured">Quests come from the built-in pool.</string>
-    <string name="model_not_downloaded">Quests come from the built-in pool. Download the Gemma model (about 550 MB, Wi-Fi only) to generate fresh quests on your phone.</string>
-    <string name="model_download">Download model</string>
+    <string name="model_title">Open-source AI</string>
+    <string name="model_not_configured">Quests come from the built-in pool. Photo checks need the open AI models, which this build can\'t download.</string>
+    <string name="model_not_downloaded">Download two open models (about 700 MB, Wi-Fi only): Qwen3 writes fresh quests and CLIP checks your photos, all on your phone.</string>
+    <string name="model_download">Download models</string>
     <string name="model_downloading">Downloading… %1$d%%</string>
     <string name="model_downloading_indeterminate">Waiting for Wi-Fi…</string>
     <string name="model_cancel">Cancel</string>
-    <string name="model_ready">Gemma is ready. New walks get AI-made quests.</string>
-    <string name="model_delete">Delete model</string>
+    <string name="model_ready">Qwen3 and CLIP are ready. New walks get AI-made quests and photos are checked on this phone.</string>
+    <string name="model_delete">Delete models</string>
     <string name="model_failed">Download failed: %1$s</string>
     <string name="model_retry">Retry</string>
     <string name="notification_channel_downloads">Model downloads</string>
-    <string name="notification_downloading_model">Downloading quest model</string>
+    <string name="notification_downloading_model">Downloading open AI models</string>
+
+    <!-- Stats Footer -->
+    <string name="stats_dev_credits">Crafted with ❤️ by @walsoup</string>
+    <string name="stats_dev_copyright">© 2026 @walsoup • All rights reserved</string>
+    <string name="stats_dev_tagline">Keep walking, keep snapping.</string>
 </resources>

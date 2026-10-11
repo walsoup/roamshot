@@ -3,6 +3,7 @@ package app.polaroam.domain.usecase
 import android.graphics.Bitmap
 import app.polaroam.ai.vision.StubPhotoVerifier
 import app.polaroam.domain.ai.PhotoVerifier
+import app.polaroam.domain.ai.PhotoVerifierUnavailableException
 import app.polaroam.domain.model.Difficulty
 import app.polaroam.domain.model.Quest
 import app.polaroam.domain.model.QuestSource
@@ -154,6 +155,22 @@ class SubmitPhotoUseCaseTest {
 
         assertThat(result).isInstanceOf(SubmitResult.Failed::class.java)
         assertThat(walks.findQuest("q1")?.status).isEqualTo(QuestStatus.OPEN)
+    }
+
+    @Test
+    fun `missing vision model is reported without counting an attempt`() = runTest {
+        startWalk(testQuest("q1"))
+        val notDownloaded = object : PhotoVerifier {
+            override suspend fun verify(bitmap: Bitmap, quest: Quest): Verdict =
+                throw PhotoVerifierUnavailableException("no model")
+        }
+        val capture = photos.newCaptureFile()
+
+        val result = useCase(notDownloaded)("q1", capture)
+
+        assertThat(result).isEqualTo(SubmitResult.VerifierUnavailable)
+        assertThat(walks.findQuest("q1")?.attempts).isEqualTo(0)
+        assertThat(photos.discarded).containsExactly(capture)
     }
 
     @Test

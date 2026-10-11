@@ -4,6 +4,12 @@ import app.polaroam.ai.vision.LabelVocabulary
 import app.polaroam.domain.model.QuestCategory
 import app.polaroam.domain.model.WalkTypeInput
 import com.google.common.truth.Truth.assertThat
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 
 class QuestPromptBuilderTest {
@@ -69,7 +75,24 @@ class QuestPromptBuilderTest {
         val retry = builder.buildRetry(original, "expected 3 quests but got 1")
 
         assertThat(retry.system).isEqualTo(original.system)
+        assertThat(retry.jsonSchema).isEqualTo(original.jsonSchema)
         assertThat(retry.user).startsWith(original.user)
         assertThat(retry.user).contains("expected 3 quests but got 1")
     }
+
+    @Test
+    fun `json schema fixes the count and limits categories and labels`() {
+        val schema = Json.parseToJsonElement(builder.build("City park", 4).jsonSchema!!).jsonObject
+        val quests = schema["properties"]!!.jsonObject["quests"]!!.jsonObject
+        val item = quests["items"]!!.jsonObject["properties"]!!.jsonObject
+
+        assertThat(quests["minItems"]!!.jsonPrimitive.int).isEqualTo(4)
+        assertThat(quests["maxItems"]!!.jsonPrimitive.int).isEqualTo(4)
+        assertThat(item["category"]!!.enumValues()).containsExactlyElementsIn(QuestCategory.entries.map { it.name })
+        assertThat(item["targetLabels"]!!.jsonObject["items"]!!.enumValues())
+            .containsExactlyElementsIn(LabelVocabulary.labels)
+    }
+
+    private fun JsonElement.enumValues(): List<String> =
+        jsonObject["enum"]!!.jsonArray.map { it.jsonPrimitive.content }
 }

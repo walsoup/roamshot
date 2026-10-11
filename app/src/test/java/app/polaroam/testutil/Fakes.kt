@@ -81,6 +81,15 @@ class FakeWalkRepository : WalkRepository {
         if (it.status == QuestStatus.OPEN) it.copy(status = QuestStatus.SKIPPED) else null
     }
 
+    override suspend fun abandonWalk(walkId: String): Boolean {
+        val walk = walks.value[walkId] ?: return false
+        val updatedQuests = walk.quests.map {
+            if (it.status == QuestStatus.OPEN) it.copy(status = QuestStatus.SKIPPED) else it
+        }
+        walks.value = walks.value + (walkId to walk.copy(quests = updatedQuests))
+        return true
+    }
+
     fun markCompleted(questId: String, attempts: Int, completion: Completion): Boolean = updateQuest(questId) {
         if (it.status == QuestStatus.OPEN) {
             it.copy(status = QuestStatus.COMPLETED, attempts = attempts, completion = completion)

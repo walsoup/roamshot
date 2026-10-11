@@ -46,12 +46,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideModelConfig(): ModelConfig = ModelConfig(
-        url = BuildConfig.MODEL_URL,
-        sha256 = BuildConfig.MODEL_SHA256,
+        quest = ModelConfig.QWEN3_0_6B.overriddenBy(BuildConfig.MODEL_URL, BuildConfig.MODEL_SHA256),
+        smollm2 = ModelConfig.SMOLLM2_360M,
+        vision = ModelConfig.CLIP_VIT_B32_VISION.overriddenBy(
+            BuildConfig.VISION_MODEL_URL,
+            BuildConfig.VISION_MODEL_SHA256,
+        ),
     )
 
     @Provides
     @Singleton
-    fun provideModelFiles(@ApplicationContext context: Context, config: ModelConfig): ModelFiles =
-        ModelFiles(File(context.filesDir, "models"), config.fileName)
+    fun provideModelFiles(@ApplicationContext context: Context): ModelFiles =
+        ModelFiles(File(context.filesDir, "models"))
 }

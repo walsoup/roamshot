@@ -17,7 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +32,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.polaroam.R
 import app.polaroam.core.result.runCatchingCancellable
 import app.polaroam.domain.model.Quest
+import app.polaroam.ui.board.QuestStamp
+import app.polaroam.ui.components.PanelIllustration
+import app.polaroam.ui.components.PixelArt
 import app.polaroam.ui.components.PixelButton
 import app.polaroam.ui.components.PixelLoadingDots
 import app.polaroam.ui.components.PixelPanel
@@ -36,6 +43,7 @@ import app.polaroam.ui.preview.PreviewData
 import app.polaroam.ui.skin.ButtonStyle
 import app.polaroam.ui.skin.PanelStyle
 import app.polaroam.ui.skin.pixelFrame
+import app.polaroam.ui.skin.tiledBackground
 import app.polaroam.ui.theme.PolaroamTheme
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -49,6 +57,7 @@ fun CaptureScreen(
     val permission = rememberCameraPermissionState()
     val controller = rememberCameraController()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel) {
@@ -63,12 +72,21 @@ fun CaptureScreen(
         if (permission.status == CameraPermissionStatus.NotRequested) permission.request()
     }
 
+    LaunchedEffect(state.phase) {
+        when (state.phase) {
+            is CapturePhase.Match -> haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            is CapturePhase.NoMatch -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            else -> Unit
+        }
+    }
+
     CaptureContent(
         state = state,
         permission = permission.status,
         onRequestPermission = permission.request,
         onOpenSettings = permission.openSettings,
         onShutter = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             val file = viewModel.beginCapture() ?: return@CaptureContent
             scope.launch {
                 runCatchingCancellable { controller.takePictureTo(file, ContextCompat.getMainExecutor(context)) }
@@ -99,12 +117,11 @@ fun CaptureContent(
     modifier: Modifier = Modifier,
 ) {
     val spacing = PolaroamTheme.spacing
-    val colors = PolaroamTheme.colors
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.background)
+            .tiledBackground(R.drawable.bg_ink)
             .padding(spacing.l),
         verticalArrangement = Arrangement.spacedBy(spacing.m),
     ) {
@@ -117,15 +134,20 @@ fun CaptureContent(
                 .pixelFrame(PolaroamTheme.skin.panel(PanelStyle.Night).frame),
         ) {
             when (permission) {
-                CameraPermissionStatus.Granted -> cameraPreview(Modifier.fillMaxSize())
+                CameraPermissionStatus.Granted -> {
+                    cameraPreview(Modifier.fillMaxSize())
+                    PixelArt(
+                        id = R.drawable.viewfinder,
+                        contentDescription = null,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
                 CameraPermissionStatus.PermanentlyDenied -> PermissionPrompt(
-                    message = stringResource(R.string.capture_permission_denied),
-                    action = stringResource(R.string.capture_permission_settings),
+                    permanentlyDenied = true,
                     onAction = onOpenSettings,
                 )
                 CameraPermissionStatus.NotRequested, CameraPermissionStatus.Denied -> PermissionPrompt(
-                    message = stringResource(R.string.capture_permission_rationale),
-                    action = stringResource(R.string.capture_permission_grant),
+                    permanentlyDenied = false,
                     onAction = onRequestPermission,
                 )
             }
@@ -137,13 +159,14 @@ fun CaptureContent(
                 text = stringResource(R.string.capture_back),
                 onClick = onBack,
                 style = ButtonStyle.Secondary,
-                modifier = Modifier.width(112.dp),
+                icon = R.drawable.icon_back,
             )
             PixelButton(
                 text = stringResource(R.string.capture_snap),
                 onClick = onShutter,
                 enabled = state.canShoot && permission == CameraPermissionStatus.Granted,
                 loading = state.phase == CapturePhase.Capturing,
+                icon = R.drawable.icon_shutter,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -153,33 +176,50 @@ fun CaptureContent(
 @Composable
 private fun QuestHeader(quest: Quest?, nextAttempt: Int) {
     val typography = PolaroamTheme.typography
+    val spacing = PolaroamTheme.spacing
     PixelPanel(style = PanelStyle.Paper, modifier = Modifier.fillMaxWidth()) {
         if (quest == null) {
             PixelLoadingDots()
         } else {
-            Text(quest.title, style = typography.label)
-            Text(quest.objective, style = typography.body)
-            Text(
-                stringResource(R.string.capture_look_for, quest.targetLabels.joinToString(", ")),
-                style = typography.caption,
-            )
-            if (nextAttempt > 1) {
-                Text(stringResource(R.string.capture_attempt, nextAttempt), style = typography.caption)
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s),
+            ) {
+                QuestStamp(poolKey = quest.poolKey, title = quest.title, category = quest.category)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(quest.title, style = typography.label)
+                    Text(quest.objective, style = typography.body)
+                    Text(
+                        stringResource(R.string.capture_look_for, quest.targetLabels.joinToString(", ")),
+                        style = typography.caption,
+                    )
+                    if (nextAttempt > 1) {
+                        Text(stringResource(R.string.capture_attempt, nextAttempt), style = typography.caption)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun BoxScope.PermissionPrompt(message: String, action: String, onAction: () -> Unit) {
+private fun BoxScope.PermissionPrompt(permanentlyDenied: Boolean, onAction: () -> Unit) {
     PixelPanel(
         modifier = Modifier
             .align(Alignment.Center)
             .padding(PolaroamTheme.spacing.l),
     ) {
+        PanelIllustration(if (permanentlyDenied) R.drawable.illo_permission_denied else R.drawable.illo_permission)
         Text(stringResource(R.string.capture_permission_title), style = PolaroamTheme.typography.label)
-        Text(message, style = PolaroamTheme.typography.body)
-        PixelButton(text = action, onClick = onAction, modifier = Modifier.fillMaxWidth())
+        Text(
+            stringResource(if (permanentlyDenied) R.string.capture_permission_denied else R.string.capture_permission_rationale),
+            style = PolaroamTheme.typography.body,
+        )
+        PixelButton(
+            text = stringResource(if (permanentlyDenied) R.string.capture_permission_settings else R.string.capture_permission_grant),
+            onClick = onAction,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -202,21 +242,30 @@ private fun BoxScope.PhaseOverlay(
         CapturePhase.Loading, CapturePhase.Ready, CapturePhase.Capturing -> Unit
 
         CapturePhase.Scanning -> PixelPanel(modifier = overlayModifier) {
+            PanelIllustration(R.drawable.illo_scanning)
             Text(stringResource(R.string.capture_scanning), style = typography.label)
             PixelLoadingDots()
         }
 
         is CapturePhase.Match -> PixelPanel(modifier = overlayModifier) {
+            PanelIllustration(R.drawable.illo_match)
             Text(stringResource(R.string.capture_match_title), style = typography.title, color = colors.successDeep)
-            PolaroidPhoto(
-                photoPath = phase.photoPath,
-                caption = state.quest?.title.orEmpty(),
-                contentDescription = stringResource(R.string.capture_photo_cd, state.quest?.title.orEmpty()),
-                tiltDegrees = -2f,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .width(160.dp),
-            )
+            Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                PolaroidPhoto(
+                    photoPath = phase.photoPath,
+                    caption = state.quest?.title.orEmpty(),
+                    contentDescription = stringResource(R.string.capture_photo_cd, state.quest?.title.orEmpty()),
+                    tiltDegrees = -2f,
+                    modifier = Modifier.width(160.dp),
+                )
+                PixelArt(
+                    id = R.drawable.sticker_star,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 4.dp, y = 4.dp),
+                )
+            }
             Text(stringResource(R.string.capture_points_earned, phase.points), style = typography.label)
             if (phase.firstTry) Text(stringResource(R.string.capture_first_try), style = typography.caption)
             Text(sawText(phase.label, phase.confidence), style = typography.caption)
@@ -225,6 +274,7 @@ private fun BoxScope.PhaseOverlay(
         }
 
         is CapturePhase.NoMatch -> PixelPanel(modifier = overlayModifier) {
+            PanelIllustration(R.drawable.illo_no_match)
             Text(stringResource(R.string.capture_no_match_title), style = typography.title, color = colors.danger)
             Text(stringResource(R.string.capture_no_match_body), style = typography.body)
             Text(sawText(phase.label, phase.confidence), style = typography.caption)
@@ -238,11 +288,13 @@ private fun BoxScope.PhaseOverlay(
         }
 
         CapturePhase.AlreadyResolved -> PixelPanel(modifier = overlayModifier) {
+            PanelIllustration(R.drawable.illo_already_done)
             Text(stringResource(R.string.capture_already_resolved), style = typography.body)
             PixelButton(text = stringResource(R.string.capture_back), onClick = onBack, modifier = Modifier.fillMaxWidth())
         }
 
         is CapturePhase.Error -> PixelPanel(modifier = overlayModifier) {
+            PanelIllustration(phase.illustration)
             Text(stringResource(phase.messageRes), style = typography.body, color = colors.danger)
             if (phase.canRetry) {
                 PixelButton(text = stringResource(R.string.capture_retry), onClick = onRetry, modifier = Modifier.fillMaxWidth())

@@ -11,7 +11,19 @@ enum class WalkPreset(val label: String, val keywords: Set<String>) {
     ),
     FOREST_TRAIL(
         "Forest trail",
-        setOf("forest", "trail", "woods", "wood", "woodland", "hike", "hiking", "mountain", "creek", "nature"),
+        setOf("forest", "trail", "woods", "wood", "woodland", "hike", "hiking", "creek", "nature"),
+    ),
+    COASTAL_WALK(
+        "Coastal walk",
+        setOf("coast", "coastal", "beach", "ocean", "sea", "shore", "sand", "bay", "waves", "tide"),
+    ),
+    RAINY_STROLL(
+        "Rainy stroll",
+        setOf("rain", "rainy", "storm", "puddle", "wet", "umbrella", "shower", "drizzle", "mist"),
+    ),
+    MOUNTAIN_TRAIL(
+        "Mountain trail",
+        setOf("mountain", "mountains", "peak", "alpine", "cliff", "hill", "hills", "ridge", "summit"),
     ),
     NIGHT_WALK(
         "Night walk",

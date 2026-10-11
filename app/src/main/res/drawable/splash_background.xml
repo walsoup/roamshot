@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch window before Android 12: the splash mark centered on Ink Navy. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ink_navy" />
+    <item
+        android:width="144dp"
+        android:height="144dp"
+        android:drawable="@drawable/splash_mark"
+        android:gravity="center" />
+</layer-list>

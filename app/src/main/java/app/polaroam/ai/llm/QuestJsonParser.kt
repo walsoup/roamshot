@@ -40,9 +40,18 @@ class QuestJsonParser(
         if (body.isEmpty()) return QuestParseResult.Invalid("the reply was empty")
 
         val envelope = try {
-            json.decodeFromString(QuestEnvelopeDto.serializer(), body)
-        } catch (e: IllegalArgumentException) {
-            return QuestParseResult.Invalid("the reply was not valid JSON for the schema (${e.message?.take(120)})")
+            val trimmed = body.trim()
+            if (trimmed.startsWith("[")) {
+                QuestEnvelopeDto(json.decodeFromString<List<QuestDto>>(trimmed))
+            } else {
+                json.decodeFromString(QuestEnvelopeDto.serializer(), trimmed)
+            }
+        } catch (e: Exception) {
+            try {
+                QuestEnvelopeDto(json.decodeFromString<List<QuestDto>>(body.trim()))
+            } catch (_: Exception) {
+                return QuestParseResult.Invalid("the reply was not valid JSON for the schema (${e.message?.take(120)})")
+            }
         }
 
         if (envelope.quests.size < expectedCount) {
@@ -123,7 +132,14 @@ class QuestJsonParser(
     companion object {
         private val fence = Regex("^```[a-zA-Z]*\\s*([\\s\\S]*?)\\s*```$")
 
-        internal fun stripCodeFence(text: String): String =
-            fence.matchEntire(text)?.groupValues?.get(1)?.trim() ?: text
+        internal fun stripCodeFence(text: String): String {
+            val trimmed = text.trim()
+            fence.matchEntire(trimmed)?.let { return it.groupValues[1].trim() }
+            if (trimmed.startsWith("```")) {
+                val afterFirstLine = trimmed.substringAfter("\n").trim()
+                return afterFirstLine.removeSuffix("```").trim()
+            }
+            return trimmed
+        }
     }
 }

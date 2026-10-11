@@ -16,12 +16,16 @@ data class PolaroamSpacing(
     val xxl: Dp = 32.dp,
 )
 
-/** [pixel] is one art pixel; borders and offsets are whole multiples of it. */
+/**
+ * [pixel] is one art pixel; borders and offsets are whole multiples of it.
+ * Icons inline with text and illustrations inside panels use [smallPixel] so they stay
+ * close to the text size while every art pixel is still a whole number of dp.
+ */
 @Immutable
 data class PolaroamDimens(
     val pixel: Dp = 2.dp,
+    val smallPixel: Dp = 1.dp,
     val border: Dp = 4.dp,
     val shadow: Dp = 4.dp,
     val minTouchTarget: Dp = 48.dp,
-    val pip: Dp = 10.dp,
 )

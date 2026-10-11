@@ -30,6 +30,7 @@ internal fun Quest.toEntity(walkId: String, position: Int) = QuestEntity(
     targetLabels = targetLabels,
     status = QuestStatus.OPEN.name,
     attempts = 0,
+    poolKey = poolKey,
 )
 
 private fun questOf(
@@ -39,6 +40,7 @@ private fun questOf(
     category: String,
     difficulty: Int,
     targetLabels: List<String>,
+    poolKey: String?,
 ) = Quest(
     id = id,
     title = title,
@@ -46,9 +48,10 @@ private fun questOf(
     category = QuestCategory.fromWire(category) ?: QuestCategory.OBJECTS,
     difficulty = Difficulty.fromLevel(difficulty) ?: Difficulty.EASY,
     targetLabels = targetLabels,
+    poolKey = poolKey,
 )
 
-internal fun QuestEntity.toQuest() = questOf(id, title, objective, category, difficulty, targetLabels)
+internal fun QuestEntity.toQuest() = questOf(id, title, objective, category, difficulty, targetLabels, poolKey)
 
 internal fun QuestEntity.toWalkQuest(completion: CompletionEntity?) = WalkQuest(
     quest = toQuest(),
@@ -89,7 +92,7 @@ internal fun Completion.toEntity() = CompletionEntity(
 )
 
 internal fun GalleryRow.toDomain() = CompletedQuest(
-    quest = questOf(questId, title, objective, category, difficulty, targetLabels),
+    quest = questOf(questId, title, objective, category, difficulty, targetLabels, poolKey),
     walkType = walkType,
     completion = Completion(
         questId = questId,

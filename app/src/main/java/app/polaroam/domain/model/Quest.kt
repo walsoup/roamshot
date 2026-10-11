@@ -43,7 +43,8 @@ enum class QuestCategory {
 
 /**
  * A single photo side quest. [targetLabels] are alternatives: a photo matches when the
- * vision model recognizes any one of them.
+ * vision model recognizes any one of them. [poolKey] names the built-in quest it came from
+ * and is null for quests the model wrote.
  */
 data class Quest(
     val id: String,
@@ -52,6 +53,7 @@ data class Quest(
     val category: QuestCategory,
     val difficulty: Difficulty,
     val targetLabels: List<String>,
+    val poolKey: String? = null,
 ) {
     init {
         require(targetLabels.size in QuestRules.MIN_LABELS..QuestRules.MAX_LABELS) {

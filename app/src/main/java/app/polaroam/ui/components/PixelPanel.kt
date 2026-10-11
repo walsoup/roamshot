@@ -18,7 +18,7 @@ import app.polaroam.ui.theme.PolaroamTheme
 fun PixelPanel(
     modifier: Modifier = Modifier,
     style: PanelStyle = PanelStyle.Paper,
-    contentPadding: PaddingValues = PaddingValues(PolaroamTheme.spacing.m),
+    contentPadding: PaddingValues = PaddingValues(PolaroamTheme.spacing.s),
     spacing: Dp = PolaroamTheme.spacing.s,
     content: @Composable ColumnScope.() -> Unit,
 ) {

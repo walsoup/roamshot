@@ -1,5 +1,6 @@
 package app.polaroam.ui.capture
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -41,7 +42,11 @@ sealed interface CapturePhase {
     ) : CapturePhase
     data class NoMatch(val label: String, val confidence: Float) : CapturePhase
     data object AlreadyResolved : CapturePhase
-    data class Error(@StringRes val messageRes: Int, val canRetry: Boolean) : CapturePhase
+    data class Error(
+        @StringRes val messageRes: Int,
+        val canRetry: Boolean,
+        @DrawableRes val illustration: Int = R.drawable.illo_error,
+    ) : CapturePhase
 }
 
 data class CaptureUiState(
@@ -143,6 +148,13 @@ class CaptureViewModel @Inject constructor(
                     )
                 }
                 SubmitResult.QuestUnavailable -> setPhase(CapturePhase.AlreadyResolved)
+                SubmitResult.VerifierUnavailable -> setPhase(
+                    CapturePhase.Error(
+                        R.string.capture_error_models_missing,
+                        canRetry = true,
+                        illustration = R.drawable.illo_model_missing,
+                    ),
+                )
                 is SubmitResult.Failed -> setPhase(CapturePhase.Error(R.string.capture_error_verify, canRetry = true))
             }
         }

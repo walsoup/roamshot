@@ -33,35 +33,46 @@ class ModelDownloadWorker @AssistedInject constructor(
 
         runCatchingCancellable { setForeground(foregroundInfo(percent = null)) }
 
+        val choiceId = inputData.getString(KEY_MODEL_CHOICE)
+        val choice = QuestModelChoice.fromId(choiceId)
+        val specsToDownload = config.packFor(choice)
+        val totalBytes = specsToDownload.sumOf { it.sizeBytes }.coerceAtLeast(1L)
+        var finishedBytes = 0L
+        var lastPercent = -1
+
         return try {
-            val part = withContext(Dispatchers.IO) { files.preparePartFile() }
-            var lastPercent = -1
-            downloader.download(config.url, part) { downloaded, total ->
-                if (total == null || total <= 0) return@download
-                val percent = ((downloaded * 100) / total).toInt().coerceIn(0, 100)
-                if (percent != lastPercent) {
-                    lastPercent = percent
-                    setProgress(workDataOf(KEY_PROGRESS to percent / 100f))
-                    runCatchingCancellable { setForeground(foregroundInfo(percent)) }
+            for (spec in specsToDownload) {
+                if (withContext(Dispatchers.IO) { files.readyModel(spec) } == null) {
+                    val part = withContext(Dispatchers.IO) { files.preparePartFile(spec) }
+                    downloader.download(spec.url, part) { downloaded, _ ->
+                        val percent = (((finishedBytes + downloaded) * 100) / totalBytes).toInt().coerceIn(0, 100)
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            setProgress(workDataOf(KEY_PROGRESS to percent / 100f))
+                            runCatchingCancellable { setForeground(foregroundInfo(percent)) }
+                        }
+                    }
+                    verifyAndPromote(spec)?.let { return failure(it) }
                 }
+                finishedBytes += spec.sizeBytes
             }
-
-            val expected = config.expectedSha256
-            if (expected != null) {
-                val ok = withContext(Dispatchers.IO) { Sha256.matches(part, expected) }
-                if (!ok) {
-                    files.discardPart()
-                    return failure("The downloaded file failed its checksum")
-                }
-            }
-
-            withContext(Dispatchers.IO) { files.promotePart() }
             Result.success()
         } catch (e: IOException) {
             if (runAttemptCount < MAX_RETRIES) Result.retry() else failure(e.message ?: "Network error")
         } catch (e: IllegalArgumentException) {
             failure(e.message ?: "Invalid download configuration")
         }
+    }
+
+    /** Returns a failure reason, or null once the file is checked and in place. */
+    private suspend fun verifyAndPromote(spec: ModelSpec): String? = withContext(Dispatchers.IO) {
+        val expected = spec.expectedSha256
+        if (expected != null && !Sha256.matches(files.partFile(spec), expected)) {
+            files.discardPart(spec)
+            return@withContext "${spec.fileName} failed its checksum"
+        }
+        files.promotePart(spec)
+        null
     }
 
     private fun failure(reason: String): Result = Result.failure(workDataOf(KEY_ERROR to reason))
@@ -78,7 +89,7 @@ class ModelDownloadWorker @AssistedInject constructor(
             )
         }
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(applicationContext.getString(R.string.notification_downloading_model))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -95,6 +106,7 @@ class ModelDownloadWorker @AssistedInject constructor(
         const val UNIQUE_WORK_NAME = "polaroam-model-download"
         const val KEY_PROGRESS = "progress"
         const val KEY_ERROR = "error"
+        const val KEY_MODEL_CHOICE = "model_choice"
         private const val CHANNEL_ID = "model-downloads"
         private const val NOTIFICATION_ID = 4101
         private const val MAX_RETRIES = 3

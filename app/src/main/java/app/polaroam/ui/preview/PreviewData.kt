@@ -29,6 +29,7 @@ object PreviewData {
             }
             QuestCardUi(
                 questId = quest.id,
+                poolKey = quest.poolKey,
                 title = quest.title,
                 objective = quest.objective,
                 category = quest.category,

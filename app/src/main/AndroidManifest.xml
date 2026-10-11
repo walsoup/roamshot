@@ -7,7 +7,7 @@
         android:required="true" />
 
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Only used to download the optional on-device quest model. -->
+    <!-- Only used to download the open AI models (Qwen3 for quests, CLIP for photo checks). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

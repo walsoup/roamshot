@@ -2,6 +2,7 @@ package app.polaroam.ui.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.polaroam.ai.model.QuestModelChoice
 import app.polaroam.core.result.runCatchingCancellable
 import app.polaroam.core.time.AppClock
 import app.polaroam.domain.model.ModelState
@@ -25,6 +26,7 @@ data class StatsUiState(
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
     val questsCompleted: Int = 0,
+    val selectedModel: QuestModelChoice = QuestModelChoice.QWEN3,
     val modelState: ModelState = ModelState.NotConfigured,
 )
 
@@ -38,17 +40,21 @@ class StatsViewModel @Inject constructor(
 
     val uiState: StateFlow<StatsUiState> = combine(
         progress.observeProgress().catch { emit(PlayerProgress(ProgressState.EMPTY, 0)) },
+        modelManager.selectedModel.catch { emit(QuestModelChoice.QWEN3) },
         modelManager.state.catch { emit(ModelState.NotConfigured) },
-    ) { player, model ->
+    ) { player, selectedChoice, model ->
         StatsUiState(
             isLoading = false,
             totalScore = player.state.totalScore,
             currentStreak = streaks.currentStreak(player.state.streak, clock.today()),
             longestStreak = player.state.streak.longest,
             questsCompleted = player.questsCompleted,
+            selectedModel = selectedChoice,
             modelState = model,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
+
+    fun onSelectModel(choice: QuestModelChoice) = modelManager.selectModel(choice)
 
     fun onDownloadModel() = modelManager.download()
 

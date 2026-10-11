@@ -7,7 +7,9 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import app.polaroam.core.coroutines.IoDispatcher
+import app.polaroam.data.repository.ModelPreferencesRepository
 import app.polaroam.domain.model.ModelState
 import app.polaroam.domain.repository.ModelManager
 import java.util.concurrent.TimeUnit
@@ -28,10 +30,18 @@ class WorkManagerModelManager @Inject constructor(
     private val workManager: WorkManager,
     private val files: ModelFiles,
     private val config: ModelConfig,
+    private val preferences: ModelPreferencesRepository,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : ModelManager {
 
     private val fileVersion = MutableStateFlow(0)
+
+    override val selectedModel: Flow<QuestModelChoice> = preferences.selectedModel
+
+    override fun selectModel(choice: QuestModelChoice) {
+        preferences.setSelectedModel(choice)
+        fileVersion.update { it + 1 }
+    }
 
     override val state: Flow<ModelState> =
         if (!config.isConfigured) {
@@ -39,15 +49,18 @@ class WorkManagerModelManager @Inject constructor(
         } else {
             combine(
                 workManager.getWorkInfosForUniqueWorkFlow(ModelDownloadWorker.UNIQUE_WORK_NAME),
+                selectedModel,
                 fileVersion,
-            ) { infos, _ -> resolve(infos.firstOrNull()) }
+            ) { infos, choice, _ -> resolve(infos.firstOrNull(), choice) }
                 .flowOn(io)
                 .distinctUntilChanged()
         }
 
     override fun download() {
         if (!config.isConfigured) return
+        val currentChoice = preferences.getSelectedModel()
         val request = OneTimeWorkRequestBuilder<ModelDownloadWorker>()
+            .setInputData(workDataOf(ModelDownloadWorker.KEY_MODEL_CHOICE to currentChoice.id))
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.UNMETERED)
@@ -65,17 +78,25 @@ class WorkManagerModelManager @Inject constructor(
 
     override suspend fun delete() {
         cancel()
-        withContext(io) { files.deleteAll() }
+        withContext(io) {
+            val activeChoice = preferences.getSelectedModel()
+            files.deleteModel(config.specFor(activeChoice))
+            val qwenReady = files.readyModel(config.quest) != null
+            val smollmReady = files.readyModel(config.smollm2) != null
+            if (!qwenReady && !smollmReady) {
+                files.deleteModel(config.vision)
+            }
+        }
         fileVersion.update { it + 1 }
     }
 
-    private fun resolve(info: WorkInfo?): ModelState = when (info?.state) {
+    private fun resolve(info: WorkInfo?, choice: QuestModelChoice): ModelState = when (info?.state) {
         WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED -> {
             val progress = info.progress.getFloat(ModelDownloadWorker.KEY_PROGRESS, -1f)
             ModelState.Downloading(progress.takeIf { it >= 0f })
         }
         else -> when {
-            files.readyModel() != null -> ModelState.Ready
+            files.allReady(config.packFor(choice)) -> ModelState.Ready
             info?.state == WorkInfo.State.FAILED -> ModelState.Failed(
                 info.outputData.getString(ModelDownloadWorker.KEY_ERROR) ?: "Download failed",
             )

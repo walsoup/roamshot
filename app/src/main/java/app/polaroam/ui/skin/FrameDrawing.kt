@@ -1,6 +1,8 @@
 package app.polaroam.ui.skin
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -8,8 +10,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import app.polaroam.ui.theme.PolaroamTheme
 import kotlin.math.roundToInt
 
 /** Draws [skin] behind the content and insets the content by the frame's own thickness. */
@@ -21,7 +27,22 @@ fun Modifier.pixelFrame(skin: FrameSkin): Modifier =
 fun DrawScope.drawFrame(skin: FrameSkin) {
     when (skin) {
         is FrameSkin.Flat -> drawFlatFrame(skin)
-        is FrameSkin.NinePatch -> drawNinePatch(skin.image, skin.insets, skin.pixelSize.toPx())
+        is FrameSkin.NinePatch -> {
+            val pixelSize = skin.pixelSize.toPx()
+            drawNinePatch(skin.image, skin.insets, pixelSize)
+            skin.fillTexture?.let { texture ->
+                val left = skin.insets.left * pixelSize
+                val top = skin.insets.top * pixelSize
+                drawTiled(
+                    image = texture,
+                    pixelSize = pixelSize,
+                    left = left,
+                    top = top,
+                    right = size.width - skin.insets.right * pixelSize,
+                    bottom = size.height - skin.insets.bottom * pixelSize,
+                )
+            }
+        }
     }
 }
 
@@ -79,6 +100,48 @@ fun DrawScope.drawNinePatch(image: ImageBitmap, insets: NinePatchInsets, pixelSi
                 dstSize = IntSize(dstW, dstH),
                 filterQuality = FilterQuality.None,
             )
+        }
+    }
+}
+
+/** Repeats [image] across the component, one source pixel to [pixelSize]. */
+fun Modifier.tiledBackground(image: ImageBitmap, pixelSize: Dp): Modifier = this.drawBehind {
+    drawTiled(image, pixelSize.toPx(), left = 0f, top = 0f, right = size.width, bottom = size.height)
+}
+
+/** Repeats the drawable across the component at the theme's pixel size. */
+@Composable
+fun Modifier.tiledBackground(@DrawableRes id: Int): Modifier =
+    this.tiledBackground(ImageBitmap.imageResource(id), PolaroamTheme.dimens.pixel)
+
+private fun DrawScope.drawTiled(
+    image: ImageBitmap,
+    pixelSize: Float,
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+) {
+    val tileW = (image.width * pixelSize).roundToInt()
+    val tileH = (image.height * pixelSize).roundToInt()
+    if (tileW <= 0 || tileH <= 0 || right <= left || bottom <= top) return
+
+    clipRect(left, top, right, bottom) {
+        var y = top.roundToInt()
+        while (y < bottom) {
+            var x = left.roundToInt()
+            while (x < right) {
+                drawImage(
+                    image = image,
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(image.width, image.height),
+                    dstOffset = IntOffset(x, y),
+                    dstSize = IntSize(tileW, tileH),
+                    filterQuality = FilterQuality.None,
+                )
+                x += tileW
+            }
+            y += tileH
         }
     }
 }

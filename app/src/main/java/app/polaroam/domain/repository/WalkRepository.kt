@@ -24,5 +24,8 @@ interface WalkRepository {
     /** Returns false if the quest is no longer open. */
     suspend fun skipQuest(questId: String): Boolean
 
+    /** Skips all remaining open quests for the given walk. */
+    suspend fun abandonWalk(walkId: String): Boolean
+
     fun observeCompletedQuests(): Flow<List<CompletedQuest>>
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import app.polaroam.R
 import app.polaroam.ui.skin.pixelFrame
 import app.polaroam.ui.theme.PolaroamTheme
 import java.io.File
@@ -30,8 +31,7 @@ fun PolaroidFrame(
     Column(
         modifier = modifier
             .graphicsLayer { rotationZ = tiltDegrees }
-            .pixelFrame(skin.frame)
-            .padding(start = skin.sidePadding, end = skin.sidePadding, top = skin.sidePadding),
+            .pixelFrame(skin.frame),
     ) {
         Box(
             modifier = Modifier
@@ -50,7 +50,7 @@ fun PolaroidFrame(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = skin.captionPadding),
+                .padding(top = skin.captionPadding),
         )
     }
 }
@@ -67,6 +67,13 @@ fun PolaroidPhoto(
         if (photoPath != null) {
             PixelAsyncImage(
                 model = File(photoPath),
+                contentDescription = contentDescription,
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            PixelImage(
+                id = R.drawable.photo_placeholder,
                 contentDescription = contentDescription,
                 modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop,

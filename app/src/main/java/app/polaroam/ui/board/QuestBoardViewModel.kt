@@ -18,9 +18,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class QuestCardUi(
     val questId: String,
+    val poolKey: String?,
     val title: String,
     val objective: String,
     val category: QuestCategory,
@@ -51,7 +53,7 @@ sealed interface QuestBoardUiState {
 @HiltViewModel
 class QuestBoardViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    walks: WalkRepository,
+    private val walks: WalkRepository,
     private val scoring: ScoreCalculator,
 ) : ViewModel() {
 
@@ -64,12 +66,19 @@ class QuestBoardViewModel @Inject constructor(
         .catch { emit(QuestBoardUiState.Error) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), QuestBoardUiState.Loading)
 
+    fun onAbandonWalk() {
+        viewModelScope.launch {
+            walks.abandonWalk(walkId)
+        }
+    }
+
     private fun Walk.toUi() = QuestBoardUiState.Loaded(
         walkType = walkType,
         source = source,
         cards = quests.map { wq ->
             QuestCardUi(
                 questId = wq.quest.id,
+                poolKey = wq.quest.poolKey,
                 title = wq.quest.title,
                 objective = wq.quest.objective,
                 category = wq.quest.category,

@@ -1,9 +1,8 @@
 package app.polaroam.ai.vision
 
 /**
- * Plain nouns quests may use as target labels.
- * Every entry must be a lowercase label the ML Kit base image labeler can emit; check additions
- * against https://developers.google.com/ml-kit/vision/image-labeling/label-map before adding.
+ * Plain nouns quests may use as target labels. CLIP checks photos against a text embedding for
+ * each one, so after changing [labels] re-run `tools/clip/build_label_embeddings.py`.
  */
 object LabelVocabulary {
 

@@ -55,6 +55,9 @@ abstract class WalkDao {
     @Query("UPDATE quests SET status = 'SKIPPED' WHERE id = :questId AND status = 'OPEN'")
     abstract suspend fun skipQuest(questId: String): Int
 
+    @Query("UPDATE quests SET status = 'SKIPPED' WHERE walkId = :walkId AND status = 'OPEN'")
+    abstract suspend fun skipOpenQuests(walkId: String): Int
+
     @Query("UPDATE quests SET status = 'COMPLETED', attempts = :attempts WHERE id = :questId AND status = 'OPEN'")
     abstract suspend fun markCompleted(questId: String, attempts: Int): Int
 
@@ -74,7 +77,8 @@ abstract class WalkDao {
             c.label AS label,
             c.confidence AS confidence,
             c.completedAtEpochMs AS completedAtEpochMs,
-            c.localDay AS localDay
+            c.localDay AS localDay,
+            q.poolKey AS poolKey
         FROM completions c
         INNER JOIN quests q ON q.id = c.questId
         INNER JOIN walks w ON w.id = q.walkId

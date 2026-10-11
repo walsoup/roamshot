@@ -7,7 +7,7 @@ class LabelVocabularyTest {
 
     @Test
     fun `every synonym points to a known label`() {
-        assertThat(LabelVocabulary.labels).containsAtLeastElementsIn(LabelVocabulary.synonyms.values)
+        assertThat(LabelVocabulary.labels).containsAtLeastElementsIn(LabelVocabulary.synonyms.values.toSet())
     }
 
     @Test

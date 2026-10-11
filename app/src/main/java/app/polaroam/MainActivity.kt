@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import app.polaroam.ui.navigation.PolaroamAppRoot
+import app.polaroam.ui.skin.rememberPixelSkin
 import app.polaroam.ui.theme.PolaroamTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -14,7 +15,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PolaroamTheme {
+            val pixelSkin = rememberPixelSkin()
+            PolaroamTheme(skin = pixelSkin) {
                 PolaroamAppRoot()
             }
         }

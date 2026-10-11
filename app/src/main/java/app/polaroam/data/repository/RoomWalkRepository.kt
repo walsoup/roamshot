@@ -71,6 +71,8 @@ class RoomWalkRepository @Inject constructor(
 
     override suspend fun skipQuest(questId: String): Boolean = walkDao.skipQuest(questId) > 0
 
+    override suspend fun abandonWalk(walkId: String): Boolean = walkDao.skipOpenQuests(walkId) > 0
+
     override fun observeCompletedQuests(): Flow<List<CompletedQuest>> =
         walkDao.observeGallery().map { rows -> rows.map { it.toDomain() } }
 }

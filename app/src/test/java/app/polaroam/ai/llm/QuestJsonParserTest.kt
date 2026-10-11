@@ -54,6 +54,13 @@ class QuestJsonParserTest {
     }
 
     @Test
+    fun `a bare json array is tolerated`() {
+        val arrayJson = "[${threeValid().joinToString(",")}]"
+
+        assertThat(parser.parse(arrayJson, 3, idFactory)).isInstanceOf(QuestParseResult.Valid::class.java)
+    }
+
+    @Test
     fun `prose around the json is rejected`() {
         val chatty = "Sure! Here are your quests: ${envelope(*threeValid())}"
 

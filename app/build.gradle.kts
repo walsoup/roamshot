@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -28,11 +29,17 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "MODEL_URL", polaroamProperty("polaroam.modelUrl").asBuildConfigString())
         buildConfigField("String", "MODEL_SHA256", polaroamProperty("polaroam.modelSha256").asBuildConfigString())
+        buildConfigField("String", "VISION_MODEL_URL", polaroamProperty("polaroam.visionModelUrl").asBuildConfigString())
+        buildConfigField(
+            "String",
+            "VISION_MODEL_SHA256",
+            polaroamProperty("polaroam.visionModelSha256").asBuildConfigString(),
+        )
         buildConfigField(
             "boolean",
             "USE_STUB_AI",
@@ -56,10 +63,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -73,6 +76,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -119,10 +128,9 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.coroutines.play.services)
 
-    implementation(libs.mediapipe.tasks.genai)
-    implementation(libs.mlkit.image.labeling)
+    implementation(libs.litertlm.android)
+    implementation(libs.onnxruntime.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

@@ -33,12 +33,12 @@ Every AI component runs strictly on the phone.
 
 | Role | Model | Size | Runtime |
 | :--- | :--- | :--- | :--- |
-| **Writing Quests** | [Qwen3-0.6B](https://huggingface.co/litert-community/Qwen3-0.6B) or [SmolLM2-360M](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct) | ~360MB–450MB | [Google LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM) |
-| **Checking Photos** | [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | ~30MB | [Microsoft ONNX Runtime](https://github.com/microsoft/onnxruntime) |
+| **Writing Quests** | [Qwen3-0.6B](https://huggingface.co/litert-community/Qwen3-0.6B) or [SmolLM2-360M](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct) | ~614 MB / ~374 MB | [Google LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM) |
+| **Checking Photos** | [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | ~89 MB | [Microsoft ONNX Runtime](https://github.com/microsoft/onnxruntime) |
 
 - **Dual-Model Switching**: Switch between **Qwen3 (0.6B)** and ultra-lightweight **SmolLM2 (360M)** with interactive chips in the Stats screen.
-- **Constrained JSON Schema**: The LLM output is strictly bounded to a JSON schema, ensuring safety and selecting target concepts only from allowed vocabulary nouns.
-- **Zero-Shot Semantic Verification**: Photos are transformed into 512-dimensional embeddings via MobileCLIP and compared against precomputed vocabulary vectors using scaled cosine similarity. Target probabilities pool together so related concepts (e.g. *tree* + *forest*) pass reliably.
+- **JSON Validation**: The LLM is prompted for JSON. Its answer goes through the parser, allowed-label validation, and safety filter, with up to one retry before falling back to the built-in quest pool. JSON-schema constrained decoding is currently disabled.
+- **Zero-Shot Semantic Verification**: Photos are transformed into 512-dimensional embeddings via CLIP ViT-B/32 and compared against precomputed vocabulary vectors using scaled cosine similarity. Target probabilities pool together so related concepts (e.g. *tree* + *forest*) pass reliably.
 - **Safety First**: Quests strictly forbid requests for photos of people/faces, private property/trespassing, roads/traffic, purchases, or dangerous night activities.
 
 ---
@@ -101,5 +101,5 @@ roamshot/
 ## 📜 License & Credits
 
 - **Developer**: Crafted with ❤️ by [@walsoup](https://github.com/walsoup) (Walid Elonok).
-- **Copyright**: © 2026 @walsoup • All rights reserved.
+- **License**: [MIT](LICENSE). Copyright (c) 2026 Walid Elonok.
 - **Models**: [Qwen3](https://huggingface.co/litert-community/Qwen3-0.6B) (Apache-2.0), [SmolLM2](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct) (Apache-2.0), [CLIP](https://huggingface.co/openai/clip-vit-base-patch32) (MIT).
